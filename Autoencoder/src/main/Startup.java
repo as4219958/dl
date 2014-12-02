@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.Random;
 
-import org.jfree.ui.RefineryUtilities;
 
 import prepare.LoadFiles;
 import prepare.imageTools;
