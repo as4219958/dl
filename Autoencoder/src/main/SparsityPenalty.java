@@ -1,11 +1,12 @@
 package main;
 
 class SparsityPenalty{
-	static final double RHO = 0.05;
-	public static double[] calAvgRho(double[] batchActivations,double[] avgRho,int minibatch){
-		int len = batchActivations.length;
-		for(int i =0;i<len;i++){
-			avgRho[i] = 1.0/minibatch*batchActivations[i];
+	static final double RHO = 0.01;
+
+	public static double[][] calAvgRho(double[][] batchActivations,double[][] avgRho,int minibatch){
+		for(int i =0;i<minibatch;i++){
+			for(int j =0;j<batchActivations[i].length;j++){
+			avgRho[i][j] = 1.0/minibatch*batchActivations[i][j];
 		}
 		return avgRho;
 	}

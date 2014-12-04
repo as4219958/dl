@@ -7,26 +7,34 @@ public class Tools {
 
 	// sigmoid函数
 	public static double f(double x) {
-		return 1 / (1 + Math.pow(Math.E, 0.0d - x));
+		return 1.0 / (1.0 + Math.pow(Math.E, 0.0 - x));
 	}
 
 	// 对sigmoid求导
 	public static double df(double x) {
-		return f(x) * (1 - f(x));
+		return f(x) * (1.0 - f(x));
 	}
 
-	public static double[] arrayF(double[] z) {
-		double[] a = new double[z.length];
+	public static double[][] arrayF(double[][] z) {
+		double[][] a = new double[z.length][];
+		for(int i = 0 ;i<z.length;i++){
+			a[i] = new double[z[i].length];
+		}
 		for (int i = 0; i < z.length; i++) {
-			a[i] = f(z[i]);
+			for(int j = 0; j<z[i].length;j++)
+			a[i][j] = f(z[i][j]);
 		}
 		return a;
 	}
 
-	public static double[] arrayDf(double[] z) {
-		double[] a = new double[z.length];
+	public static double[][] arrayDf(double[][] z) {
+		double[][] a = new double[z.length][];
+		for(int i = 0 ;i<z.length;i++){
+			a[i] = new double[z[i].length];
+		}
 		for (int i = 0; i < z.length; i++) {
-			a[i] = df(z[i]);
+			for(int j = 0; j<z[i].length;j++)
+			a[i][j] = df(z[i][j]);
 		}
 		return a;
 	}
@@ -69,6 +77,9 @@ public class Tools {
 		x = (x - temp / 2) / (Math.sqrt(temp / 12));
 		x = miu + x * Math.sqrt(sigma2);
 		return x;
+	}
+	public static void main(String[] args) {
+		System.out.println(f(10));
 	}
 
 }

@@ -6,24 +6,33 @@ import utils.DataGenerator;
 import utils.Tools;
 
 public class Backpropagation {
-	public void forward(double[][] activations, double[][] zs, double[] input,
-			int layers, double[][][] w, double[][] b, int[] layersCount) {
-		double[] activation;
-		double[] z;
+	public void forward(double[][][] activations, double[][][] zs, double[][] input,
+			int layers, double[][][] w, double[][] b, int[] layersCount,int minibatch) {
+		double[][] activation;
+		double[][] z;
 		activation = input;
 		activations[0] = input;
 		for (int i = 0; i < w.length; i++) {
-			z = new double[layersCount[i + 1]];
-			for (int j = 0; j < z.length; j++) {
-				for (int k = 0; k < activation.length; k++) {
-					z[j] += activation[k] * w[i][j][k];
+			z = new double[minibatch][];
+			for(int n = 0;n<minibatch;n++){
+				z[n] = new double[layersCount[i + 1]];
+			}
+			for(int n = 0;n<minibatch;n++){
+				for (int j = 0; j < z.length; j++) {
+					for (int k = 0; k < activation.length; k++) {
+						z[n][j] += activation[n][k] * w[i][j][k];
+					}
+					z[n][j] += b[i][j];
 				}
-				z[j] += b[i][j];
 			}
 			zs[i] = z;
-			activation = new double[layersCount[i + 1]];// 个数同z的个数相同,即z的个数
+			activation = new double[minibatch][];
+			for(int n = 0;n<minibatch;n++){
+				activation[n] = new double[layersCount[i + 1]];// 个数同z的个数相同,即z的个数
+			}
 			activation = Tools.arrayF(z);
 			activations[i + 1] = activation;
+			
 		}
 		// for (int i = 0; i < activations.length; i++) {
 		// System.out.print("第" + i + "层:");
@@ -35,13 +44,13 @@ public class Backpropagation {
 
 	}
 
-	public void backProp(double[] input, double[] target, double[][][] w,
+	public void backProp(double[][] input, double[][] target, double[][][] w,
 			double[][] b, double[][][] dw, double[][] db, int layers,
-			int[] layersCount, double[][] activations, double[][] zs,
-			double[][] avgRho, boolean useSparsity, double beta)
+			int[] layersCount, double[][][] activations, double[][][] zs,
+			double[][][] avgRho, boolean useSparsity, double beta,int minibatch)
 			throws IOException {
-		double[] z = null;
-		double[] delta = null;
+		double[][] z = null;
+		double[][] delta = null;
 		double[][][] ndw = new double[layers - 1][][];
 		double[][] ndb = new double[layers - 1][];
 		ndw = DataGenerator.fillWeight(ndw, "0", layersCount);
@@ -49,15 +58,16 @@ public class Backpropagation {
 		//delta = CrossEntropy.delta(activations[activations.length - 1], target);
 		 delta = SquaredError.delta(activations[activations.length - 1],
 		 target,zs[zs.length-1]);
-		for (int i = 0; i < w[w.length - 1].length/* delta.length */; i++) {
+		 for(int n = 0;n<minibatch;n++)
+			 for (int i = 0; i < w[w.length - 1].length/* delta.length */; i++) {
 			for (int j = 0; j < w[w.length - 1][i].length /*
 														 * activations[activations
 														 * .length - 2].length
 														 */; j++)
-				ndw[w.length - 1][i][j] = delta[i]
-						* activations[activations.length - 2][j];
+				ndw[w.length - 1][i][j] = delta[n][i]
+						* activations[activations.length - 2][n][j];
 		}
-		ndb[db.length - 1] = delta;
+		ndb[db.length - 1] = delta;//delta的列加和
 		// double[] temp = new double[layersCount[layers - 2]];// new
 		// double[w[w.length-1][0].length];//倒数第二层的个数
 		for (int i = w.length - 2; i >= 0; i--) {

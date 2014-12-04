@@ -98,13 +98,17 @@ public class Startup {
 	public void train(Backpropagation bp) throws IOException {
 		Random r = new Random();
 		int rnum;
-		double[][] activations = new double[layers][];
-		double[][] zs = new double[layers - 1][];
-		double[][] batchActivations = new double[layers][];
-		double[][] avgRho = new double[layers][];
+		double[][][] activations = new double[layers][][];
+		double[][][] zs = new double[layers - 1][][];
+		double[][][] batchActivations = new double[layers][][];
+		double[][][] avgRho = new double[layers][][];
 		for (int i = 0; i < layers; i++) {
-			batchActivations[i] = new double[layersCount[i]];
-			avgRho[i] = new double[layersCount[i]];
+			batchActivations[i] = new double[minibatch][];
+			avgRho[i] = new double[minibatch][];
+			for(int j = 0;j<batchActivations[i].length;j++){
+				batchActivations[i][j] = new double[layersCount[i]];
+				avgRho[i][j] = new double[layersCount[i]];
+			}
 		}
 		for (int i = 0; i < trainTimes; i++) {
 			if (useSparsity) {
@@ -118,19 +122,21 @@ public class Startup {
 			input = DataGenerator
 					.loadValues(inputTxt, rnum, input, minibatch);
 			System.out.println("rnum:" + rnum);
-			for (int j = 0; j < minibatch; j++) {
-				bp.forward(activations, zs, input[j], layers, w, b, layersCount);
+//			for (int j = 0; j < minibatch; j++) {
+				bp.forward(activations, zs, input, layers, w, b, layersCount,minibatch);
 				if (useSparsity) {
 					for (int m = 0; m < layers; m++) {
 						for (int n = 0; n < batchActivations[m].length; n++) {
-							batchActivations[m][n] += activations[m][n];
+							for (int k = 0; k < batchActivations[m][n].length; k++) {
+								batchActivations[m][n][k] += activations[m][n][k];
+							}
 						}
 					}
 				}
 				// //
-				bp.backProp(input[j], input[j], w, b, dw, db, layers,
+				bp.backProp(input, input, w, b, dw, db, layers,
 						layersCount, activations, zs, avgRho, useSparsity, beta);
-			}
+//			}
 			if (useSparsity) {
 				for (int m = 0; m < layers; m++) {
 					avgRho[m] = SparsityPenalty.calAvgRho(batchActivations[m],
@@ -144,10 +150,10 @@ public class Startup {
 		// System.out.print(accuary()+" ");
 	}
 
-	private double accuracy(Backpropagation bp, double[][] avgRho)
+	private double accuracy(Backpropagation bp, double[][][] avgRho)
 			throws IOException {
-		double[][] activations = new double[layers][];
-		double[][] zs = new double[layers - 1][];
+		double[][][] activations = new double[layers][][];
+		double[][][] zs = new double[layers - 1][][];
 		Random r = new Random();
 //		int rnum = r.nextInt(n) / 3 * 2 / minibatch * minibatch;
 //		evaluation = DataGenerator.loadValues(validationTxt, rnum, evaluation,
@@ -156,15 +162,12 @@ public class Startup {
 		evaluation = DataGenerator.loadValues(inputTxt, 1, evaluation,
 				minibatch);
 		double sum = 0;
-		for (int j = 0; j < minibatch; j++) {
-			bp.forward(activations, zs, evaluation[j], layers, w, b,
-					layersCount);
-			double[] activation = activations[activations.length - 1];
+			bp.forward(activations, zs, evaluation, layers, w, b,
+					layersCount,minibatch);
 			// double[] a = regulate(activation);
 
-			 sum += SquaredError.cost(activation, evaluation[j]);
+			 sum = SquaredError.cost(activations[activations.length - 1], evaluation);
 			 //sum += CrossEntropy.cost(activation, evaluation[j], minibatch,useSparsity);
-		}
 
 		return sum;
 
@@ -269,8 +272,8 @@ public class Startup {
 	public void test(Backpropagation bp) throws IOException {
 		// double[][] image;double2Int(
 		double[] image;
-		double[][] activations = new double[layers][];
-		double[][] zs = new double[layers - 1][];
+		double[][][] activations = new double[layers][][];
+		double[][][] zs = new double[layers - 1][][];
 		// image = new double[minibatch][];
 		Random r = new Random();
 //		int rnum = r.nextInt(n / 3 * 2) / minibatch * minibatch;
@@ -279,12 +282,10 @@ public class Startup {
 		int rnum = r.nextInt(n);
 		System.out.print(rnum/10.0);
 		test = DataGenerator.loadValues(inputTxt, 1, test, 1/* minibatch */);
-		for (int i = 0; i < test.length/* minibatch */; i++) {
-			bp.forward(activations, zs, test[i], layers, w, b, layersCount);
-			image = activations[activations.length - 1];
+			bp.forward(activations, zs, test, layers, w, b, layersCount,1);
+			image = activations[activations.length - 1][0];
 			imageTools.dataToImage(image, "D:/bc.jpg", 28, 28);// minibatch,
 																// layersCount[0]);
-		}
 	}
 
 	public static void main(String[] args) throws IOException {
