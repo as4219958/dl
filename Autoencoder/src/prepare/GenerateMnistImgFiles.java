@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Random;
 
 public class GenerateMnistImgFiles implements GenerateFilesInterface {
-	final int COUNT = 10;
+	final int COUNT = 1000;
 	final String path = "C:/Users/Administrator/Desktop/t10k-images";
 
 	@Override
@@ -21,7 +21,7 @@ public class GenerateMnistImgFiles implements GenerateFilesInterface {
 		File directory = new File(path);
 		FileOutputStream f = new FileOutputStream(dist);// true表示添加
 		FileChannel fc = f.getChannel();// 用getChannel()方法转化为FileChannel类
-		for (int i = 0; i <= 9; i++) {
+		for (int i = 0; i <= 0; i++) {
 			List<Image> imgList = Image.getImages(getRandomImg(directory, i,
 					COUNT));
 

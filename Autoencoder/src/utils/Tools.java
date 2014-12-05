@@ -17,24 +17,24 @@ public class Tools {
 
 	public static double[][] arrayF(double[][] z) {
 		double[][] a = new double[z.length][];
-		for(int i = 0 ;i<z.length;i++){
+		for (int i = 0; i < z.length; i++) {
 			a[i] = new double[z[i].length];
 		}
 		for (int i = 0; i < z.length; i++) {
-			for(int j = 0; j<z[i].length;j++)
-			a[i][j] = f(z[i][j]);
+			for (int j = 0; j < z[i].length; j++)
+				a[i][j] = f(z[i][j]);
 		}
 		return a;
 	}
 
 	public static double[][] arrayDf(double[][] z) {
 		double[][] a = new double[z.length][];
-		for(int i = 0 ;i<z.length;i++){
+		for (int i = 0; i < z.length; i++) {
 			a[i] = new double[z[i].length];
 		}
 		for (int i = 0; i < z.length; i++) {
-			for(int j = 0; j<z[i].length;j++)
-			a[i][j] = df(z[i][j]);
+			for (int j = 0; j < z[i].length; j++)
+				a[i][j] = df(z[i][j]);
 		}
 		return a;
 	}
@@ -47,15 +47,14 @@ public class Tools {
 	public static double defaultDataGenerator(int size) {
 		return ra.nextGaussian() / Math.sqrt(size);
 	}
-	
+
 	public static double RandomDataGenerator() {
-		return Math.random()*2-1;
-	}
-	
-	public static double RandomGaussianGenerator() {
-		return normRand(0,0.0001);
+		return Math.random() * 2 - 1;
 	}
 
+	public static double RandomGaussianGenerator() {
+		return normRand(0, 0.0001);
+	}
 
 	public static double baiseGenerator() {
 		return 1.1;
@@ -78,6 +77,7 @@ public class Tools {
 		x = miu + x * Math.sqrt(sigma2);
 		return x;
 	}
+
 	public static void main(String[] args) {
 		System.out.println(f(10));
 	}

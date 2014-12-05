@@ -6,33 +6,34 @@ import utils.DataGenerator;
 import utils.Tools;
 
 public class Backpropagation {
-	public void forward(double[][][] activations, double[][][] zs, double[][] input,
-			int layers, double[][][] w, double[][] b, int[] layersCount,int minibatch) {
+	public void forward(double[][][] activations, double[][][] zs,
+			double[][] input, int layers, double[][][] w, double[][] b,
+			int[] layersCount, int minibatch) {
 		double[][] activation;
 		double[][] z;
 		activation = input;
 		activations[0] = input;
 		for (int i = 0; i < w.length; i++) {
 			z = new double[minibatch][];
-			for(int n = 0;n<minibatch;n++){
-				z[n] = new double[layersCount[i + 1]];
+			for (int m = 0; m < minibatch; m++) {
+				z[m] = new double[layersCount[i + 1]];
 			}
-			for(int n = 0;n<minibatch;n++){
-				for (int j = 0; j < z.length; j++) {
+			for (int m = 0; m < minibatch; m++) {
+				for (int j = 0; j < z[m].length; j++) {
 					for (int k = 0; k < activation.length; k++) {
-						z[n][j] += activation[n][k] * w[i][j][k];
+						z[m][j] += activation[m][k] * w[i][j][k];
 					}
-					z[n][j] += b[i][j];
+					z[m][j] += b[i][j];
 				}
 			}
 			zs[i] = z;
 			activation = new double[minibatch][];
-			for(int n = 0;n<minibatch;n++){
-				activation[n] = new double[layersCount[i + 1]];// 个数同z的个数相同,即z的个数
+			for (int m = 0; m < minibatch; m++) {
+				activation[m] = new double[layersCount[i + 1]];// 个数同z的个数相同,即z的个数
 			}
 			activation = Tools.arrayF(z);
 			activations[i + 1] = activation;
-			
+
 		}
 		// for (int i = 0; i < activations.length; i++) {
 		// System.out.print("第" + i + "层:");
@@ -47,86 +48,106 @@ public class Backpropagation {
 	public void backProp(double[][] input, double[][] target, double[][][] w,
 			double[][] b, double[][][] dw, double[][] db, int layers,
 			int[] layersCount, double[][][] activations, double[][][] zs,
-			double[][][] avgRho, boolean useSparsity, double beta,int minibatch)
+			double[][] avgRho, boolean useSparsity, double beta, int minibatch)
 			throws IOException {
 		double[][] z = null;
 		double[][] delta = null;
-		double[][][] ndw = new double[layers - 1][][];
-		double[][] ndb = new double[layers - 1][];
-		ndw = DataGenerator.fillWeight(ndw, "0", layersCount);
-		ndb = DataGenerator.fillBiase(ndb, "0", layersCount);
-		//delta = CrossEntropy.delta(activations[activations.length - 1], target);
-		 delta = SquaredError.delta(activations[activations.length - 1],
-		 target,zs[zs.length-1]);
-		 for(int n = 0;n<minibatch;n++)
-			 for (int i = 0; i < w[w.length - 1].length/* delta.length */; i++) {
-			for (int j = 0; j < w[w.length - 1][i].length /*
-														 * activations[activations
-														 * .length - 2].length
-														 */; j++)
-				ndw[w.length - 1][i][j] = delta[n][i]
-						* activations[activations.length - 2][n][j];
+//		double[][][] ndw = new double[layers - 1][][];
+//		double[][] ndb = new double[layers - 1][];
+//		ndw = DataGenerator.fillWeight(ndw, "0", layersCount);
+//		ndb = DataGenerator.fillBiase(ndb, "0", layersCount);
+		delta = CrossEntropy.delta(activations[activations.length - 1],
+		 target);
+		//delta = SquaredError.delta(activations[activations.length - 1], target,
+//				zs[zs.length - 1]);
+		for (int n = 0; n < minibatch; n++)
+			for (int i = 0; i < w[w.length - 1].length/* delta.length */; i++) {
+				for (int j = 0; j < w[w.length - 1][i].length /*
+															 * activations[
+															 * activations
+															 * .length -
+															 * 2].length
+															 */; j++)
+					dw[w.length - 1][i][j] = delta[n][i]
+							* activations[activations.length - 2][n][j];
+			}
+		double[] avgDelta = new double[layersCount[0]];
+		for (int m = 0; m < minibatch; m++) {
+			for (int j = 0; j < delta[m].length; j++) {
+				avgDelta[j] += 1 / minibatch * delta[m][j];
+			}
+
 		}
-		ndb[db.length - 1] = delta;//delta的列加和
+		db[db.length - 1] = avgDelta;// delta的列加和
 		// double[] temp = new double[layersCount[layers - 2]];// new
 		// double[w[w.length-1][0].length];//倒数第二层的个数
 		for (int i = w.length - 2; i >= 0; i--) {
-			double[] temp = new double[layersCount[i + 1]];// new
+			double[][] temp = new double[minibatch][];// new
+			for (int j = 0; j < minibatch; j++) {
+				temp[j] = new double[layersCount[i + 1]];
+			}
 			z = zs[i];
-			double[] spv = Tools.arrayDf(z);
+			double[][] spv = Tools.arrayDf(z);
 			if (!useSparsity) {
-				for (int k = 0; k < w[i + 1][0].length; k++) {
-					for (int j = 0; j < w[i + 1].length; j++) {
-						temp[k] += w[i + 1][j][k] * delta[j];
+				for (int m = 0; m < minibatch; m++) {
+					for (int k = 0; k < w[i + 1][0].length; k++) {
+						for (int j = 0; j < w[i + 1].length; j++) {
+							temp[m][k] += w[i + 1][j][k] * delta[m][j];
+						}
 					}
 				}
 			} else {
-				for (int k = 0; k < w[i + 1][0].length; k++) {
-					for (int j = 0; j < w[i + 1].length; j++) {
-						temp[k] += w[i + 1][j][k] * delta[j];
+				for (int m = 0; m < minibatch; m++) {
+					for (int k = 0; k < w[i + 1][0].length; k++) {
+						for (int j = 0; j < w[i + 1].length; j++) {
+							temp[m][k] += w[i + 1][j][k] * delta[m][j];
+						}
 					}
 				}
 				// //////////////
 
-				double[] sparsityParam = SparsityPenalty.calPenalty(avgRho[i + 1],beta);
+				double[] sparsityParam = SparsityPenalty.calPenalty(
+						avgRho[i + 1], beta);
+				for (int m = 0; m < minibatch; m++) {
+					for (int k = 0; k < w[i + 1][0].length; k++) {
+						temp[m][k] += sparsityParam[k];
+					}
+				}
+			}
+			avgDelta = new double[layersCount[i + 1]];
+			for (int m = 0; m < minibatch; m++) {
+				delta[m] = new double[layersCount[i + 1]];
+			}
+			for (int m = 0; m < minibatch; m++) {
 				for (int k = 0; k < w[i + 1][0].length; k++) {
-					temp[k] += sparsityParam[k];
+					delta[m][k] = temp[m][k] * spv[m][k];
 				}
 			}
-			delta = new double[layersCount[i + 1]];
-			for (int k = 0; k < w[i + 1][0].length; k++) {
-				delta[k] = temp[k] * spv[k];
-			}
-			for (int j = 0; j < w[i].length; j++) {
-				for (int k = 0; k < w[i][j].length; k++) {
-					ndw[i][j][k] = delta[j] * activations[i][k];
+			for (int m = 0; m < minibatch; m++) {
+				for (int j = 0; j < delta[m].length; j++) {
+					avgDelta[j] += 1.0 / minibatch * delta[m][j];
 				}
-			}
-			ndb[i] = delta;
-		}
-		// try { 
-		// print(ndw, "ndw"); // print(ndb, "ndb"); 
-		// } catch (IOException e1) { 
-		// e1.printStackTrace(); 
-		// }
-		// try { // print(dw, "dw"); 
-		// print(db, "db"); 
-		// }catch (IOException e) { 
-		//e.printStackTrace(); 
-		// }
-		for (int i = 0; i < dw.length; i++) {
-			for (int j = 0; j < dw[i].length; j++) {
-				for (int k = 0; k < dw[i][j].length; k++) {
-					dw[i][j][k] += ndw[i][j][k];
-				}
-			}
-		}
 
-		for (int i = 0; i < db.length; i++) {
-			for (int j = 0; j < db[i].length; j++) {
-				db[i][j] += ndb[i][j];
 			}
+			for (int m = 0; m < minibatch; m++) {
+				for (int j = 0; j < w[i].length; j++) {
+					for (int k = 0; k < w[i][j].length; k++) {
+						dw[i][j][k] += 1.0/minibatch*delta[m][j] * activations[i][m][k];
+					}
+				}
+			}
+			db[i] = avgDelta;
 		}
+		// try {
+		// print(ndw, "ndw"); // print(ndb, "ndb");
+		// } catch (IOException e1) {
+		// e1.printStackTrace();
+		// }
+		// try { // print(dw, "dw");
+		// print(db, "db");
+		// }catch (IOException e) {
+		// e.printStackTrace();
+		// }
 	}
 
 	public void adjustWeight(double[][][] w, double[][] b, double[][][] dw,
